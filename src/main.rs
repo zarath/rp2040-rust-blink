@@ -4,15 +4,16 @@
 #![no_std]
 #![no_main]
 
-use bsp::entry;
+use embedded_hal::digital::v2::OutputPin;
+use seeeduino_xiao_rp2040::entry;
+
 use defmt::*;
 use defmt_rtt as _;
-use embedded_hal::digital::v2::OutputPin;
 use panic_probe as _;
 
 // Provide an alias for our BSP so we can switch targets quickly.
 // Uncomment the BSP you included in Cargo.toml, the rest of the code does not need to change.
-use rp_pico as bsp;
+use seeeduino_xiao_rp2040 as bsp;
 // use sparkfun_pro_micro_rp2040 as bsp;
 
 use bsp::hal::{
@@ -53,15 +54,15 @@ fn main() -> ! {
         &mut pac.RESETS,
     );
 
-    let mut led_pin = pins.led.into_push_pull_output();
+    let mut led_pin = pins.led_green.into_push_pull_output();
 
     loop {
         info!("on!");
         led_pin.set_high().unwrap();
-        delay.delay_ms(500);
+        delay.delay_ms(950);
         info!("off!");
         led_pin.set_low().unwrap();
-        delay.delay_ms(500);
+        delay.delay_ms(50);
     }
 }
 
