@@ -9,9 +9,33 @@
 //! new memory settings.
 
 use std::env;
+use std::f32::consts::PI;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
+
+fn pdm_table() -> Vec<u32> {
+    let mut bits: Vec<u32> = Vec::with_capacity(4096);
+    let mut qe = 0.0f32;
+    let mut y: f32;
+
+    let vals = (0..4096).map(|i| (((i + 3072) as f32) / 2048. * PI).sin());
+    for v in vals {
+        qe += v;
+        if qe > 0.0 {
+            bits.push(1);
+            y = 1.0;
+        } else {
+            bits.push(0);
+            y = -1.0;
+        }
+        qe -= y;
+    }
+
+    bits.chunks(32)
+        .map(|x| x.iter().fold(0u32, |res, b| (res << 1) ^ *b))
+        .collect::<Vec<u32>>()
+}
 
 fn main() {
     // Put `memory.x` in our output directory and ensure it's
@@ -27,5 +51,11 @@ fn main() {
     // any file in the project changes. By specifying `memory.x`
     // here, we ensure the build script is only re-run when
     // `memory.x` is changed.
-    println!("cargo:rerun-if-changed=memory.x");
+    // println!("cargo:rerun-if-changed=memory.x");
+    let pdm = pdm_table();
+    File::create(out.join("pdm_table.rs"))
+        .unwrap()
+        .write(format!("const PDM_TABLE: [u32; {}] = {:?};", pdm.len(), pdm).as_bytes())
+        .unwrap();
+    println!("cargo:rerun-if-changed=build.rs");
 }
